@@ -2,10 +2,10 @@ import axios from 'axios'
 
 const { REACT_APP_HOST } = process.env
 
-const dictUrl = `http://${REACT_APP_HOST}:8081/dictionary`
-const trainUrl = `http://${REACT_APP_HOST}:8081/training`
-const scoreUrl = `http://${REACT_APP_HOST}:8081/user_words`
-const wordUrl = `http://${REACT_APP_HOST}:8081/words`
+const dictUrl = `https://${REACT_APP_HOST}/dictionary`
+const trainUrl = `https://${REACT_APP_HOST}/training`
+const scoreUrl = `https://${REACT_APP_HOST}/user_words`
+const wordUrl = `https://${REACT_APP_HOST}/words`
 
 export const wordService = {
   getWords: async (user) => {
@@ -96,8 +96,8 @@ export const wordService = {
 }
 
 
-const loginUrl = `http://${REACT_APP_HOST}:8081/login`
-const registerUrl = `http://${REACT_APP_HOST}:8081/register`
+const loginUrl = `https://${REACT_APP_HOST}/login`
+const registerUrl = `https://${REACT_APP_HOST}/register`
 
 export const authService = {
   auth: async (payload) => {
@@ -119,7 +119,7 @@ export const authService = {
   }
 }
 
-const usersUrl = `http://${REACT_APP_HOST}:8081/users`
+const usersUrl = `https://${REACT_APP_HOST}/users`
 
 export const userService = {
   getUsers: async (user) => {
