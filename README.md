@@ -1,4 +1,4 @@
-# WORDTR41N #
+# WORDTRAIN #
 
 A web application that helps people to memorize new words from different languages.
 
