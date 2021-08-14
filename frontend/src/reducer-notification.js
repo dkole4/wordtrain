@@ -5,7 +5,7 @@ const reducer = (state = null, action) => {
   case 'CLEAR_NOTIFICATION':
     if (state && action.data.content === state.content)
       return null
-    break
+    return state
   default:
     return state
   }
