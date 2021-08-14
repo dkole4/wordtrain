@@ -1,6 +1,7 @@
 .metals
 .vscode
 .setup*
+.env
 
 backend/project/target/
 
