@@ -22,7 +22,7 @@ export const FrontPage = () => {
   return (
     <Container>
       <Segment>
-        <Header>Welcome to WordApp version 0.1</Header>
+        <Header>Welcome to WordTrain version 0.1</Header>
       </Segment>
       <UserList />
     </Container>
