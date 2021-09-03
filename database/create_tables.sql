@@ -2,6 +2,7 @@ CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   username TEXT NOT NULL,
   passwd TEXT NOT NULL,
+  joined TIMESTAMP NOT NULL DEFAULT NOW(),
   last_seen TIMESTAMP NOT NULL DEFAULT NOW(),
   UNIQUE(username)
 );
