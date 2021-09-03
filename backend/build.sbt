@@ -1,7 +1,8 @@
-val finchVersion = "0.26.0"
-val circeVersion = "0.10.1"
+val finchVersion = "0.32.1"
+val circeVersion = "0.14.1"
 val postgresqlVersion = "42.2.18"
-val bcryptVersion = "4.1"
+val finaglePSQLVersion = "0.13.0"
+val bcryptVersion = "4.3.0"
 
 lazy val root = (project in file("."))
   .settings(
@@ -11,6 +12,7 @@ lazy val root = (project in file("."))
       "com.github.finagle" %% "finchx-core"  % finchVersion,
       "com.github.finagle" %% "finchx-circe"  % finchVersion,
       "io.circe" %% "circe-generic" % circeVersion,
+      "io.github.finagle" %% "finagle-postgres-shapeless" % finaglePSQLVersion,
       "org.postgresql" % "postgresql" % postgresqlVersion,
       "com.github.t3hnar" %% "scala-bcrypt" % bcryptVersion
     )
