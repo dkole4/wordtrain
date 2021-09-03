@@ -222,6 +222,7 @@ object Retrieve {
                         coalesce(sum(tries), 0) AS tries, count(word_id) AS word_count
                 FROM users u
                 LEFT JOIN user_words uw ON u.id=uw.user_id GROUP BY id
+                ORDER BY tries DESC
                 """.as[UserInfo])
           .get
       )
