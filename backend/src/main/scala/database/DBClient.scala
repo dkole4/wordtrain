@@ -108,6 +108,6 @@ class Client {
     if (!connection.isDefined)
       false 
     else
-      Await.result { query.exec(connection.get) }
+      Await.result { query.exec(connection.get) } == 1
   }
 }
