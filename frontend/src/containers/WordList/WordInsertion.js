@@ -1,153 +1,16 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { useField } from './WordApp'
-import { setErrorMessage, setNotificationMessage } from '../reducer-notification'
-import { updateWord, deleteWord, createWords } from '../reducer-word'
+
+import { useField } from 'utils/useField'
+import { setErrorMessage, setNotificationMessage } from 'store/actions/notification-actions'
+import { createWords } from 'store/actions/word-actions'
 
 import {
-  Container,
-  Segment,
-  Table,
-  Button,
-  Input,
-  Header,
-  Form,
-  Dropdown
+  Container, Table, Button, Header, Form, Dropdown
 } from 'semantic-ui-react'
+import { languageOptions } from '.'
 
-
-export const languageOptions = [
-  {
-    key: 'russian',
-    text: 'russian',
-    value: 'russian'
-  },
-  {
-    key: 'english',
-    text: 'english',
-    value: 'english'
-  },
-  {
-    key: 'finnish',
-    text: 'finnish',
-    value: 'finnish'
-  }
-]
-
-export const WordList = () => {
-  const [formVisibilty, setVisibility] = useState(false)
-
-  const words = useSelector(state => state.words)
-
-  const showForm = () =>
-    setVisibility(!formVisibilty)
-
-  return (
-    <Container>
-      <Segment>
-        { formVisibilty && <><AddWordForm /><br /></> }
-        <Button fluid onClick={showForm}>
-          { formVisibilty
-            ? 'Hide'
-            : 'Add words' }
-        </Button>
-      </Segment>
-      <Table>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Word</Table.HeaderCell>
-            <Table.HeaderCell>Translation</Table.HeaderCell>
-            <Table.HeaderCell>Languages</Table.HeaderCell>
-            <Table.HeaderCell>Score</Table.HeaderCell>
-            <Table.HeaderCell />
-            <Table.HeaderCell />
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          { words.map(word => (
-            <WordPair key={word.id} wordPair={word} />
-          )) }
-        </Table.Body>
-      </Table>
-    </Container>
-  )
-}
-
-export const WordPair = ({ wordPair }) => {
-  const [change, setChange] = useState(false)
-  const [word] = useField('text', wordPair.word, false)
-  const [transl] = useField('text', wordPair.translation, false)
-
-  const dispatch = useDispatch()
-  const user = useSelector(state => state.loggedUser)
-  
-  const switchChange = () => {
-    setChange(!change)
-  }
-
-  const submitChange = () => {
-    dispatch(
-      updateWord(
-        wordPair.id, 
-        user,
-        {
-          word: word.value,
-          translation: transl.value
-        }
-      )
-    )
-    switchChange()
-    dispatch(
-      setNotificationMessage(
-        `The word pair ${word.value}/${transl.value} was updated.`
-      )
-    )
-  }
-
-  const deleteWordPair = () => {
-    dispatch(deleteWord(user, wordPair.id))
-  }
-
-  return (
-    <Table.Row>
-      <Table.Cell>
-        { change                  
-          ? <Input { ...word } /> 
-          : wordPair.word }
-      </Table.Cell>
-      <Table.Cell>
-        { change
-          ? <Input { ...transl } />
-          : wordPair.translation }
-      </Table.Cell>
-      <Table.Cell>
-        { wordPair.lang_word} / { wordPair.lang_translation }
-      </Table.Cell>
-      <Table.Cell> 
-        { wordPair.tries 
-          ? `${Math.round(wordPair.score / wordPair.tries * 100)} %`
-          : 'was not used'
-        } 
-      </Table.Cell>
-      <Table.Cell collapsing textAlign='right'>
-        <Button onClick={switchChange}>{ change ? 'Hide' : 'Change' }</Button>
-      </Table.Cell>
-      <Table.Cell collapsing textAlign='right'>
-        <Button positive={change} negative={!change} onClick={ change ? submitChange : deleteWordPair }>
-          { change ? 'Submit' : 'Delete' }
-        </Button>
-      </Table.Cell>
-    </Table.Row>
-  )
-}
-
-WordPair.propTypes = {
-  wordPair: PropTypes.object.isRequired
-}
-
-export const AddWordForm = () => {
+export const WordInsertion = () => {
   const [word, resetWord] = useField('text')
   const [transl, resetTransl] = useField('text')
   const [wordLang, resetWordLang] = useField('dropdown')
@@ -161,9 +24,9 @@ export const AddWordForm = () => {
     if (transl.value && word.value && wordLang.value && translLang.value) {
       const newWord = {
         word: word.value,
-        transl: transl.value,
-        lang_t: translLang.value,
-        lang_w: wordLang.value
+        translation: transl.value,
+        lang_word: wordLang.value,
+        lang_translation: translLang.value
       }
 
       const same = wordList.filter(word => 

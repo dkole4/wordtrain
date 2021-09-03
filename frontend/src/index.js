@@ -5,7 +5,7 @@ import { Provider } from 'react-redux'
 
 (async () => {
   const { App } = await import('./app')
-  const { store } = await import('./store')
+  const { store } = await import('./store/store')
 
   ReactDOM.render(
     <Provider store={store}>

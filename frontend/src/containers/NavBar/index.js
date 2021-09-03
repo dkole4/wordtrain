@@ -1,14 +1,19 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
-import { useState } from 'react'
 import { Menu } from 'semantic-ui-react'
-import { Link } from 'react-router-dom'
-import { logout } from '../reducer-user'
+import { Link, useLocation } from 'react-router-dom'
+
+import { logout } from 'store/actions/auth-actions'
 
 export const NavBar = () => {
   const [page, setPage] = useState('')
 
   const dispatch = useDispatch()
+  const location = useLocation()
+  
+  useEffect(() => {
+    setPage(location.pathname.slice(1))
+  }, [])
 
   const switchPage = (newPage) => {
     setPage(newPage)

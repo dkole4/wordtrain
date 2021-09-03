@@ -1,12 +1,11 @@
-import React from 'react'
-import { useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { WordApp } from './components/WordApp'
-import { LoginForm } from './components/LoginForm'
-import { initializeUser } from './reducer-user'
 import { Container } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css'
 
+import { initializeUser } from './store/actions/auth-actions'
+import { WordTrain } from './containers/WordTrain'
+import { LoginForm } from './containers/LoginForm'
 
 export const App = () => {
   const dispatch = useDispatch()
@@ -19,8 +18,9 @@ export const App = () => {
 
   return (
     <Container>
-      { user === null && <LoginForm /> }
-      { user !== null && <WordApp user={user}/> }
+      { user
+        ? <WordTrain user={user}/>
+        : <LoginForm /> }
     </Container>
   )
 }
