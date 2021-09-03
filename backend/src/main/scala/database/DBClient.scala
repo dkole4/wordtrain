@@ -33,13 +33,13 @@ class Client {
     */
   def connect(): Option[PostgresClientImpl] = {
     val params = getConnectionData()
-    println(params)
+    println("Initializing a new connection...")
     try {
       Option(
         Postgres.Client()
           .withCredentials(params.dbuser, Some(params.dbpasswd))
           .database(params.dbname)
-          .withSessionPool.maxSize(3)
+          .withSessionPool.maxSize(1)
           .withBinaryResults(true)
           .withBinaryParams(true)
           .newRichClient(s"${params.dbhost}:5432")
@@ -60,7 +60,8 @@ class Client {
     if (!connection.isDefined) 0
     
     try {
-      Await.result { connection.get.close() }
+      Await.all { connection.get.close() }
+      println("Connection closed...")
       1
     } catch {
       case _: Throwable => 0
@@ -107,6 +108,6 @@ class Client {
     if (!connection.isDefined)
       false 
     else
-      Await.result { query.exec(connection.get) } == 1
+      Await.result { query.exec(connection.get) }
   }
 }

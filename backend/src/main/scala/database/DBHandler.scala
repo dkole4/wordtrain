@@ -9,7 +9,9 @@ import com.twitter.finagle.postgres.generic._
 class DBHandler {
   val client = new Client()
 
-  def endSession() = client.endSession()
+  def endSession() = {
+    client.endSession()
+  }
 
   /**
     * Execute a query using the connected database.
