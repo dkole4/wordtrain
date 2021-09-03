@@ -5,7 +5,7 @@ import com.twitter.finagle.postgres._
 import com.twitter.finagle.postgres.generic._
 
 
-/** Handler of database related operations. */
+/** Models of database tables. **/
 object DBModels { 
   case class Users(
     id:        Int,
@@ -37,16 +37,9 @@ object DBModels {
   )
 }
 
+/** Models of response bodies. **/
 object ResponseModels {
-  /**
-    * Class representing a word pair.
-    *
-    * @param id the id of word pair.
-    * @param word the word of word pair.
-    * @param translation the translation of word pair.
-    * @param lang_word the language of word.
-    * @param lang_translation the language of translation.
-    */
+
   case class WordPair (
     word:             String,
     translation:      String, 
@@ -80,18 +73,6 @@ object ResponseModels {
         tries
       )
     }
-
-    // def apply(
-    //   id: Int,
-    //   word: String,
-    //   translation: String,
-    //   lang_word: String,
-    //   lang_translation: String,
-    //   score: Int,
-    //   tries: Int
-    // ): UserWordPair = {
-    //   UserWordPair(id, word, translation, lang_word, lang_translation, score, tries)
-    // }
 
     def toWordPair(u: UserWordPair) = 
       WordPair(u.word, u.translation, u.lang_word, u.lang_translation)
@@ -128,46 +109,4 @@ object ResponseModels {
       )
     }
   }
-
-  // object UserInfo {
-  //   def apply(
-  //     id:        Int,
-  //     username:  String,
-  //     joined:    LocalDateTime,
-  //     last_seen: LocalDateTime,
-  //   ): UserInfo = {
-  //     UserInfo(id, username, joined, last_seen, 0, 0, Seq[UserWordPair]())
-  //   }
-
-  //   def apply(
-  //     id:        Int,
-  //     username:  String,
-  //     joined:    LocalDateTime,
-  //     last_seen: LocalDateTime,
-  //     score:     Int,
-  //     tries:     Int
-  //   ): UserInfo = {
-  //     UserInfo(id, username, joined, last_seen, score, tries, Seq[UserWordPair]())
-  //   }
-
-  //   def apply(
-  //     user: UserInfo,
-  //     words: Seq[UserWordPair]
-  //   ): UserInfo = {
-  //     UserInfo(
-  //       user.id, user.username, user.joined,
-  //       user.last_seen, user.score, user.tries, words
-  //     )
-  //   }
-
-  //   implicit val userInfo: RowDecoder[UserInfo] = 
-  //     RowDecoder(row: Row): UserInfo  {
-  //       UserInfo(
-  //         row.get[Int]("id"),
-  //         row.get[String]("username"),
-  //         row.get[LocalDateTime]("joined"),
-  //         row.get[LocalDateTime]("last_seen")
-  //       )
-  //     }
-  // }
 }
