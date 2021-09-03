@@ -6,7 +6,7 @@ import { UserList } from '../../containers/UserList'
 export const FrontPage = () => (
   <Container>
     <Segment>
-      <Header>Welcome to WordTrain version 0.1</Header>
+      <Header>Welcome to WordTrain version 0.2</Header>
     </Segment>
     <UserList />
   </Container>

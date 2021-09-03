@@ -14,13 +14,15 @@ export const UserList = () => {
   
   const getDate = (date) =>
     date.split('.')[0].replaceAll('-', '/').replace('T', ' ')
+  
+  const getLevel = (tries) =>
+    Math.floor(Math.sqrt(tries / 10))
 
   useEffect( async () => {
     const response = await userService.getUsers(user)
     
     if (response.status === 200) {
       const data = response.data
-      data.sort((a, b) => b.tries - a.tries)
       if (data) {
         setUsers(data)
       } else {
@@ -53,7 +55,7 @@ export const UserList = () => {
           { users.map(user =>
             <Table.Row key={user.id}>
               <Table.Cell>{ user.username }</Table.Cell>
-              <Table.Cell>{ user.tries } </Table.Cell>
+              <Table.Cell>{ getLevel(user.tries) } lvl ({ user.tries }) </Table.Cell>
               <Table.Cell>{ user.word_count }</Table.Cell>
               <Table.Cell>{ getDate(user.last_seen) }</Table.Cell>
               <Table.Cell>{ getDate(user.joined) }</Table.Cell>
