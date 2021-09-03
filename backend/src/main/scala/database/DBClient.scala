@@ -1,10 +1,10 @@
 package backend
 
 import com.twitter.util.{Future, FuturePool, Await}
+import com.twitter.conversions.DurationOps._
 import com.twitter.finagle.Postgres
 import com.twitter.finagle.postgres._
 import com.twitter.finagle.postgres.generic._
-
 
 /** Database client class. */
 class Client {
@@ -33,20 +33,21 @@ class Client {
     */
   def connect(): Option[PostgresClientImpl] = {
     val params = getConnectionData()
-    println("Initializing a new connection...")
+    println("Establishing a new connection...")
     try {
-      Option(
-        Postgres.Client()
-          .withCredentials(params.dbuser, Some(params.dbpasswd))
-          .database(params.dbname)
-          .withSessionPool.maxSize(1)
-          .withBinaryResults(true)
-          .withBinaryParams(true)
-          .newRichClient(s"${params.dbhost}:5432")
-      )
+      val client = Postgres.Client()
+        .withCredentials(params.dbuser, Some(params.dbpasswd))
+        .database(params.dbname)
+        .withSessionPool.maxSize(1)
+        .withBinaryResults(true)
+        .withBinaryParams(true)
+        .newRichClient(s"${params.dbhost}:5432")
+      
+      println("Connection establishing finished.")
+      Option( client )
     } catch {
       case _: Throwable => 
-        println("Connection failed.")
+        println("Connection establishing failed.")
         Option.empty
     }
   }
@@ -61,7 +62,7 @@ class Client {
     
     try {
       Await.all { connection.get.close() }
-      println("Connection closed...")
+      println("Connection closed.")
       1
     } catch {
       case _: Throwable => 0
@@ -94,7 +95,11 @@ class Client {
     if (!connection.isDefined)
       Option.empty
     else {
-      Option( Await.result { query.run(connection.get) } )
+      try {
+        Option( Await.result(query.run(connection.get), 5.seconds) )
+      } catch {
+        case _: Throwable => Option.empty
+      }
     }
   }
 
@@ -108,6 +113,10 @@ class Client {
     if (!connection.isDefined)
       false 
     else
-      Await.result { query.exec(connection.get) } == 1
+      try {
+        Await.result(query.exec(connection.get), 5.seconds) == 1
+      } catch {
+        case _: Throwable => false
+      }
   }
 }
