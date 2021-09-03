@@ -2,9 +2,7 @@ import axios from 'axios'
 
 const { REACT_APP_HOST } = process.env
 
-// https://${REACT_APP_HOST}/api/users
-
-const usersUrl = `http://${REACT_APP_HOST}/users`
+const usersUrl = `https://${REACT_APP_HOST}/api/users`
 
 export const userService = {
   getUsers: async (user) => {

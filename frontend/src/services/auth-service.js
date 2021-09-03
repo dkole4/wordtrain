@@ -2,11 +2,8 @@ import axios from 'axios'
 
 const { REACT_APP_HOST } = process.env
 
-// const loginUrl = `https://${REACT_APP_HOST}/api/login`
-// const registerUrl = `https://${REACT_APP_HOST}/api/register`
-
-const loginUrl = `http://${REACT_APP_HOST}/login`
-const registerUrl = `http://${REACT_APP_HOST}/register`
+const loginUrl = `https://${REACT_APP_HOST}/api/login`
+const registerUrl = `https://${REACT_APP_HOST}/api/register`
 
 export const authService = {
   auth: async (payload) => {

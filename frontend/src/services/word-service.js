@@ -2,15 +2,10 @@ import axios from 'axios'
 
 const { REACT_APP_HOST } = process.env
 
-// const dictUrl = `https://${REACT_APP_HOST}/api/dictionary`
-// const trainUrl = `https://${REACT_APP_HOST}/api/training`
-// const scoreUrl = `https://${REACT_APP_HOST}/api/user_words`
-// const wordUrl = `https://${REACT_APP_HOST}/api/words`
-
-const dictUrl = `http://${REACT_APP_HOST}/dictionary`
-const trainUrl = `http://${REACT_APP_HOST}/training`
-const scoreUrl = `http://${REACT_APP_HOST}/user_words`
-const wordUrl = `http://${REACT_APP_HOST}/words`
+const dictUrl = `https://${REACT_APP_HOST}/api/dictionary`
+const trainUrl = `https://${REACT_APP_HOST}/api/training`
+const scoreUrl = `https://${REACT_APP_HOST}/api/user_words`
+const wordUrl = `https://${REACT_APP_HOST}/api/words`
 
 export const wordService = {
   getWords: async (user) => {
