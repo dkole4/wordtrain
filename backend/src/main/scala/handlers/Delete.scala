@@ -7,6 +7,7 @@ import com.twitter.finagle.postgres._
 import com.twitter.finagle.postgres.generic._
 
 import DBModels._
+import DBHandler._
 import Auth.{ isTokenValid, Authorization }
 
 
@@ -63,23 +64,19 @@ object Delete {
     * @param request request object containing the word and user ids
     * @return 1 if operation was successful, 0 otherwise
     */
-  def removeWord(request: DeleteRequest, conn: Option[DBHandler] = None): Boolean = {
-    val db = if (conn.isDefined) conn.get else new DBHandler()
+  def removeWord(request: DeleteRequest): Boolean = {
     val links =
-      db.fetch[Row](sql"SELECT user_id FROM user_words WHERE word_id=${request.wordId}")
+      fetch(sql"SELECT user_id FROM user_words WHERE word_id=${request.wordId}")
         .get
 
-    val link = db.execute(sql"""DELETE FROM user_words 
-                                WHERE word_id=${request.wordId}
-                                AND user_id=${request.userId}""")
+    val link = execute(
+      sql"""DELETE FROM user_words 
+            WHERE word_id=${request.wordId}
+            AND user_id=${request.userId}""")
 
-    val res = if (links.length == 1 && links.head.get[Int]("user_id") == request.userId)
-      db.execute(sql"DELETE FROM words WHERE id=${request.wordId}")
+    if (links.length == 1 && links.head.get[Int]("user_id") == request.userId)
+      execute(sql"DELETE FROM words WHERE id=${request.wordId}")
     else
       link
-
-    if (!conn.isDefined)
-      db.endSession()
-    res
   }
 }

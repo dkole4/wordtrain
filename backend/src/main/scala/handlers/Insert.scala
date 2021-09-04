@@ -7,6 +7,7 @@ import com.twitter.finagle.postgres.Row
 import com.twitter.finagle.postgres.generic._
 
 import DBModels._
+import DBHandler._
 import ResponseModels._
 import Retrieve._
 import Auth.{ isTokenValid, Authorization }
@@ -33,23 +34,18 @@ object Insert {
     * 403 if user's token is invalid, 400 if request is in incorrect form.
     */
   def insertMany(request: InsertRequest, token: Authorization): Output[Array[UserWordPair]] = {
-    val db = new DBHandler()
-    val res = {
-      if (!isTokenValid(token, request.userId, Some(db)))
-        Unauthorized(new Exception("You have no access to perform the operation."))
+    if (!isTokenValid(token, request.userId))
+      Unauthorized(new Exception("You have no access to perform the operation."))
 
-      val words = request.words
-        .map(insertWord(request.userId, _, Some(db)))
-        .filter(_.isDefined)
-        .map(_.get)
+    val words = request.words
+      .map(insertWord(request.userId, _))
+      .filter(_.isDefined)
+      .map(_.get)
 
-      if (words.length < 1)
-        BadRequest(new Exception("Invalid data format."))
-      else
-        Created(words) 
-    }
-    db.endSession()
-    res
+    if (words.length < 1)
+      BadRequest(new Exception("Invalid data format."))
+    else
+      Created(words) 
   }
 
   /**
@@ -59,11 +55,8 @@ object Insert {
     * @param pair WordPair object representing the word.
     * @return inserted word pair as a map.
     */
-  def insertWord(
-    userId: Int, pair: WordPair, conn: Option[DBHandler] = None
-  ): Option[UserWordPair] = {
-    val db = if (conn.isDefined) conn.get else new DBHandler()
-    val same = db.fetchRow(
+  def insertWord(userId: Int, pair: WordPair): Option[UserWordPair] = {
+    val same = fetchRow(
       sql"""SELECT * FROM words
             WHERE (word=${pair.word} AND translation=${pair.translation}
                     AND lang_word=${pair.lang_word}
@@ -72,8 +65,8 @@ object Insert {
                     AND lang_word=${pair.lang_translation}
                     AND lang_translation=${pair.lang_word})""".as[Words])
 
-    val res: Option[UserWordPair] = if (!same.isDefined) {
-      val added = db.fetchRow(
+    if (!same.isDefined) {
+      val added = fetchRow(
         sql"""INSERT INTO words(word, translation, lang_word, lang_translation)
               VALUES (${pair.word}, ${pair.translation}, 
                       ${pair.lang_word}, ${pair.lang_translation})
@@ -82,20 +75,16 @@ object Insert {
       if (!added.isDefined) 
         Option.empty
       else {
-        db.execute(sql"""INSERT INTO user_words(user_id, word_id)
-                        VALUES ($userId, ${added.get.id})""")
+        execute(sql"""INSERT INTO user_words(user_id, word_id)
+                      VALUES ($userId, ${added.get.id})""")
 
         Option( UserWordPair(added.get) )
       }
     } else {
-      db.execute(sql"""INSERT INTO user_words(user_id, word_id)
-                       VALUES ($userId, ${same.get.id})""")
+      execute(sql"""INSERT INTO user_words(user_id, word_id)
+                    VALUES ($userId, ${same.get.id})""")
 
       Option( UserWordPair(same.get) )
     }
-
-    if (!conn.isDefined)
-      db.endSession()
-    res
   }
 }

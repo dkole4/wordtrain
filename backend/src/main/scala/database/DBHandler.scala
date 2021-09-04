@@ -1,30 +1,26 @@
 package backend
 
-import java.sql.Types
 import com.twitter.finagle.postgres._
 import com.twitter.finagle.postgres.generic._
 
 
 /** Handler of database related operations. */
-class DBHandler {
-  val client = new Client()
-
-  def endSession() = {
-    client.endSession()
-  }
-
+object DBHandler {
   /**
     * Execute a query using the connected database.
     *
     * @param query query to execute.
     */
   def fetch[T](query: Query[T]): Option[Seq[T]] = {
+    val client = new Client()
     try {
-      client.fetch(query)
+      val res = client.fetch(query)
+      client.endSession()
+      res
     } catch {
       case e: Throwable => 
         println(e)
-        endSession()
+        client.endSession()
         Option( Seq[T]() )
     }
   }
@@ -39,8 +35,11 @@ class DBHandler {
   
 
   def execute[T](query: Query[T]): Boolean = {
+    val client = new Client()
     try {
-      client.execute(query)
+      val res = client.execute(query)
+      client.endSession()
+      res
     } catch {
       case e: Throwable => 
         println(e)

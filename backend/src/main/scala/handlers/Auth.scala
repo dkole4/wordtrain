@@ -10,6 +10,7 @@ import com.twitter.finagle.postgres._
 import com.twitter.finagle.postgres.generic._
 
 import DBModels._
+import DBHandler._
 import Update.{ updateUserActivity }
 import scala.util.Success
 import scala.util.Failure
@@ -66,52 +67,45 @@ object Auth {
     * if credentials are valid, 403 status code otherwise.
     */
   def checkCredentials(request: Credentials): Output[TokenizedUser] = {
-    val db = new DBHandler()
     val user = 
-      db.fetchRow(sql"SELECT * FROM users WHERE username=${request.username}".as[Users])
+      fetchRow(sql"SELECT * FROM users WHERE username=${request.username}".as[Users])
       
-    val res = if (!user.isDefined)
+    if (!user.isDefined)
       Forbidden(new Exception("No user with such credentials found"))
     else if (!validate(user.get.passwd, request.password))
       Forbidden(new Exception("Invalid password"))
     else {
-      updateUserActivity(user.get.id, Some(db))
+      updateUserActivity(user.get.id)
       Ok(TokenizedUser(user.get.id, user.get.username, generateToken(user.get.id)))
     }
-
-    db.endSession()
-    res
   }
 
   def changeUserPassword(
     request: PasswordUpdate, token: Authorization
   ): Output[Boolean] = {
-    val db = new DBHandler()
     val user = 
-      db.fetchRow(sql"SELECT * FROM users WHERE user_id=${request.userId}".as[Users])
+      fetchRow(sql"SELECT * FROM users WHERE user_id=${request.userId}".as[Users])
 
-    val res: Output[Boolean] = if (!user.isDefined)
+    if (!user.isDefined)
       Forbidden(new Exception("No user with such credentials found"))
-    else if (!isTokenValid(token, request.userId, Some(db)))
+    else if (!isTokenValid(token, request.userId))
       Forbidden(new Exception("Invalid token"))
     else if (!validate(user.get.passwd, request.oldPassword))
       Forbidden(new Exception("Invalid password"))
     else {
-      updateUserActivity(user.get.id, Some(db))
+      updateUserActivity(user.get.id)
       
       val hash = request.newPassword.bcryptSafeBounded
       hash match {
         case Success(h) =>
           Ok(
-            db.execute(
+            execute(
               sql"UPDATE users SET password=${hash.get} WHERE user_id=${request.userId}")
           )
         case Failure(e) =>
           InternalServerError(new Exception("Password change wasn't successful, try again."))
       }
     }
-    db.endSession()
-    res
   }
 
   /**
@@ -124,26 +118,22 @@ object Auth {
   def generateToken(userId: Int): String = {
     val generator = new TokenGenerator()
     val token = generator.generateToken()
-    val db = new DBHandler()
 
     val existing =
-      db.fetchRow(sql"SELECT token FROM token WHERE user_id=${userId}")
+      fetchRow(sql"SELECT token FROM token WHERE user_id=${userId}")
 
-    val res = if (!existing.isDefined) {
-      db.fetchRow(sql"""INSERT INTO token(user_id, token, expires)
-                        VALUES ($userId, $token, NOW() + interval '1 day') RETURNING token""")
+    if (!existing.isDefined) {
+      fetchRow(sql"""INSERT INTO token(user_id, token, expires)
+                     VALUES ($userId, $token, NOW() + interval '1 day') RETURNING token""")
         .get
         .get[String]("token")
     } 
     else {
-      db.fetchRow(sql"""UPDATE token SET token=$token, expires=NOW() + interval '1 day' 
-                        WHERE user_id=$userId RETURNING token""")
+      fetchRow(sql"""UPDATE token SET token=$token, expires=NOW() + interval '1 day' 
+                     WHERE user_id=$userId RETURNING token""")
         .get
         .get[String]("token")
     }
-
-    db.endSession()
-    res
   }
 
   /**
@@ -154,24 +144,19 @@ object Auth {
     * @return true if token is valid, false otherwise.
     */
   def isTokenValid(
-    header: Authorization, userId: Int = -1, conn: Option[DBHandler] = None
+    header: Authorization, userId: Int = -1
   ): Boolean = {
     val headerParts = header.token.split(" ")
     if (headerParts.length != 2 || headerParts(0) != "bearer") false
 
     val token = headerParts(1)
-    val db = if (conn.isDefined) conn.get else new DBHandler()
     
-    val res = if (userId <= 0)
-      db.fetchRow[Row](sql"SELECT * FROM token WHERE token=$token")
+    if (userId <= 0)
+      fetchRow(sql"SELECT * FROM token WHERE token=$token")
         .isDefined
     else 
-      db.fetchRow[Row](sql"SELECT * FROM token WHERE token=$token AND user_id=$userId")
+      fetchRow(sql"SELECT * FROM token WHERE token=$token AND user_id=$userId")
         .isDefined
-    
-    if (!conn.isDefined)
-      db.endSession()
-    res
   }
 
   /**
@@ -184,18 +169,17 @@ object Auth {
     * and token, 400 status code otherwise.
     */
   def registerUser(request: Credentials): Output[TokenizedUser] = {
-    val db = new DBHandler()
     val existing =
-      db.fetchRow[Row](sql"SELECT username FROM users WHERE username=${request.username}")
+      fetchRow(sql"SELECT username FROM users WHERE username=${request.username}")
 
-    val res = if (existing.isDefined) 
+    if (existing.isDefined) 
       BadRequest(new Exception("Username is already taken"))
     else {
       val hash = request.password.bcryptSafeBounded
       hash match {
         case Success(h) =>
           val user = 
-            db.fetchRow(sql"""INSERT INTO users(username, passwd) 
+            fetchRow(sql"""INSERT INTO users(username, passwd) 
                                 VALUES (${request.username}, ${hash.get}) RETURNING id, username""")
               .get
           
@@ -210,8 +194,6 @@ object Auth {
           InternalServerError(new Exception("Registration wasn't successful, try again."))
       }
     }
-    db.endSession()
-    res
   }
 }
 

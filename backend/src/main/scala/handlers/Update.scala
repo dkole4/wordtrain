@@ -7,6 +7,7 @@ import com.twitter.finagle.postgres.Row
 import com.twitter.finagle.postgres.generic._
 
 import DBModels._
+import DBHandler._
 import ResponseModels._
 import Insert.{ insertMany, insertWord, InsertRequest }
 import Delete.{ removeWord, DeleteRequest }
@@ -57,12 +58,9 @@ object Update {
     *
     * @param userId the id of user.
     */
-  def updateUserActivity(userId: Int, conn: Option[DBHandler] = None) {
-    val db = if (conn.isDefined) conn.get else new DBHandler()
-    db.execute(
+  def updateUserActivity(userId: Int) {
+    execute(
       sql"""UPDATE users SET last_seen=NOW()+interval '3 hour' WHERE id=$userId""")
-    if (!conn.isDefined)
-      db.endSession()
   }
 
   /**
@@ -72,14 +70,12 @@ object Update {
     * @param userId the id of user.
     * @return true if user has the word pair, false otherwise.
     */
-  def checkWordPair(wordId: Int, userId: Int, conn: Option[DBHandler] = None): Boolean = {
-    val db = if (conn.isDefined) conn.get else new DBHandler()
-    val res = db.fetchRow(sql"""SELECT id FROM words w, user_words uw
-                                WHERE id=$wordId AND user_id=$userId 
-                                AND id=word_id""")
+  def checkWordPair(wordId: Int, userId: Int): Boolean = {
+    fetchRow(
+      sql"""SELECT id FROM words w, user_words uw
+            WHERE id=$wordId AND user_id=$userId 
+            AND id=word_id""")
       .isDefined
-    if (!conn.isDefined) db.endSession()
-    res
   }
 
   /**
@@ -94,44 +90,39 @@ object Update {
     * is not found in user's dictionary, 400 status code if request has incorrect information.
     */
   def updateWordPair(wordId: Int, request: UpdateWordRequest, token: Authorization): Output[UserWordPair] = {
-    val db = new DBHandler()
-    val res = {
-      if (!isTokenValid(token, request.userId, Some(db))) 
-        Unauthorized(new Exception("You have no access to perform the operation."))
-      
-      if (!checkWordPair(wordId, request.userId, Some(db)))
-        NotFound(new Exception("Words not found."))
-      
-      updateUserActivity(request.userId, Some(db))
+    if (!isTokenValid(token, request.userId)) 
+      Unauthorized(new Exception("You have no access to perform the operation."))
+    
+    if (!checkWordPair(wordId, request.userId))
+      NotFound(new Exception("Words not found."))
+    
+    updateUserActivity(request.userId)
 
-      val links = 
-        db.fetch(sql"""SELECT * FROM user_words WHERE word_id=$wordId""".as[UserWords])
-          .get
+    val links = 
+      fetch(sql"""SELECT * FROM user_words WHERE word_id=$wordId""".as[UserWords])
+        .get
 
-      if (links.length > 1) {
-        removeWord(DeleteRequest(wordId, request.userId), Some(db))
+    if (links.length > 1) {
+      removeWord(DeleteRequest(wordId, request.userId))
 
-        val added = insertWord(request.userId, UserWordPair.toWordPair(request.pair), Some(db))
+      val added = insertWord(request.userId, UserWordPair.toWordPair(request.pair))
 
-        if (added.isDefined)
-          Created(added.get)
-        else
-          BadRequest(new Exception("Invalid word data."))
-      } else {
-        val updated = db.fetchRow(
-          sql"""UPDATE words 
-                SET word=${request.pair.word}, 
-                    translation=${request.pair.translation}
-                WHERE id=$wordId RETURNING *""".as[Words])
+      if (added.isDefined)
+        Created(added.get)
+      else
+        BadRequest(new Exception("Invalid word data."))
+    } else {
+      val updated = fetchRow(
+        sql"""UPDATE words 
+              SET word=${request.pair.word}, 
+                  translation=${request.pair.translation}
+              WHERE id=$wordId RETURNING *""".as[Words])
 
-        if (updated.isDefined)    
-          Created(UserWordPair(updated.get, request.pair.score, request.pair.tries))
-        else
-          BadRequest(new Exception("Invalid word data."))
-      }
+      if (updated.isDefined)    
+        Created(UserWordPair(updated.get, request.pair.score, request.pair.tries))
+      else
+        BadRequest(new Exception("Invalid word data."))
     }
-    db.endSession()
-    res
   }
 
   /**
@@ -145,35 +136,30 @@ object Update {
     * was not found.
     */
   def updateUserScore(request: UpdateScoreRequest, token: Authorization): Output[Array[UserWords]] = {
-    val db = new DBHandler()
-    val res = {
-      if (!isTokenValid(token, request.userId, Some(db)))
-        Unauthorized(new Exception("You have no access to perform the operation."))
+    if (!isTokenValid(token, request.userId))
+      Unauthorized(new Exception("You have no access to perform the operation."))
 
-      updateUserActivity(request.userId, Some(db))
+    updateUserActivity(request.userId)
 
-      val response = request.changes
-        .map(change => {
-          if (!checkWordPair(change.wordId, request.userId, Some(db)))
-            Option.empty
-          else 
-            db.fetchRow(
-              sql"""UPDATE user_words 
-                    SET score=score+${change.score},
-                        tries=tries+${change.tries}
-                    WHERE word_id=${change.wordId} AND user_id=${request.userId}
-                    RETURNING *""".as[UserWords])
-          }
-        )
-        .filter(_.isDefined)
-        .map(_.get)
+    val response = request.changes
+      .map(change => {
+        if (!checkWordPair(change.wordId, request.userId))
+          Option.empty
+        else 
+          fetchRow(
+            sql"""UPDATE user_words 
+                  SET score=score+${change.score},
+                      tries=tries+${change.tries}
+                  WHERE word_id=${change.wordId} AND user_id=${request.userId}
+                  RETURNING *""".as[UserWords])
+        }
+      )
+      .filter(_.isDefined)
+      .map(_.get)
 
-      if (response.length < 1)
-        NotFound(new Exception("Words not found."))
+    if (response.length < 1)
+      NotFound(new Exception("Words not found."))
 
-      Created(response)
-    }
-    db.endSession()
-    res
+    Created(response)
   }
 }

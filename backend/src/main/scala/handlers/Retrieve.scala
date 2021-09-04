@@ -6,6 +6,7 @@ import io.circe.syntax._
 import com.twitter.finagle.postgres.generic._
 
 import DBModels._
+import DBHandler._
 import ResponseModels._
 import Update.{ updateUserActivity }
 import Auth.{ isTokenValid }
@@ -49,25 +50,21 @@ object Retrieve {
     * valid, 403 status code otherwise.
     */
   def allUserWords(userId: Int, token: Authorization): Output[Seq[UserWordPair]] = {
-    val db = new DBHandler()
-
-    val res = if (!isTokenValid(token, userId, Some(db))) {
+    if (!isTokenValid(token, userId))
       Unauthorized(new Exception("You don't have access to this information."))
-    }
     else {
-      updateUserActivity(userId, Some(db))
+      updateUserActivity(userId)
 
-      Ok(
-        db.fetch(
-          sql"""SELECT w.*, score, tries 
-                FROM words w, user_words uw
-                WHERE user_id=$userId AND word_id=id""".as[UserWordPair])
-          .get
-      )
+      val res = fetch(
+        sql"""SELECT w.*, score, tries 
+              FROM words w, user_words uw
+              WHERE user_id=$userId AND word_id=id""".as[UserWordPair])
+
+      if (res.isDefined)
+        Ok(res.get)
+      else
+        InternalServerError(new Exception("Server error occurred, try again."))
     }
-
-    db.endSession()
-    res
   }
 
   /**
@@ -83,14 +80,11 @@ object Retrieve {
   def trainingUserWords(
     userId: Int, request: TrainRequest, token: Authorization
   ): Output[Seq[UserWordPair]] = {
-    val db = new DBHandler()
-
-    val res = if (!isTokenValid(token, userId, Some(db))) {
+    if (!isTokenValid(token, userId)) 
       Unauthorized(new Exception("You don't have access to this information."))
-    }
     else {
-      Ok(
-        db.fetch(sql"""
+      val res = fetch(
+        sql"""
            SELECT * FROM 
            ((SELECT w.*, score, tries FROM words w, user_words uw
              WHERE user_id=$userId AND id=word_id 
@@ -103,11 +97,12 @@ object Retrieve {
                        AND lang_word=${request.lang_translation}
                        AND lang_translation=${request.lang_word})) AS words
             ORDER BY score / (tries + 1) ASC LIMIT ${request.size}""".as[UserWordPair])
-          .get
-      )
+      
+      if (res.isDefined)
+        Ok(res.get)
+      else
+        InternalServerError(new Exception("Server error occurred, try again."))
     }
-    db.endSession()
-    res
   }
 
   /**
@@ -122,26 +117,23 @@ object Retrieve {
   def allLanguageWords(
     request: DictRequest, token: Authorization
   ): Output[Seq[Words]] = {
-    val db = new DBHandler()
-    val res = if (!isTokenValid(token, -1, Some(db))) {
+    if (!isTokenValid(token))
       Unauthorized(new Exception("You don't have access to this information."))
-    }
     else {
-      Ok(
-        db.fetch(
-          sql"""SELECT * FROM words
-                WHERE lang_word=${request.lang_word}
-                    AND lang_translation=${request.lang_translation}
-                UNION (SELECT id, translation, word, lang_translation, lang_word
-                        FROM words
-                        WHERE lang_word=${request.lang_translation}
-                            AND lang_translation=${request.lang_word}
-                      )""".as[Words])
-          .get
-      )
+      val res = fetch(
+        sql"""SELECT * FROM words
+              WHERE lang_word=${request.lang_word}
+                  AND lang_translation=${request.lang_translation}
+              UNION (SELECT id, translation, word, lang_translation, lang_word
+                      FROM words
+                      WHERE lang_word=${request.lang_translation}
+                          AND lang_translation=${request.lang_word}
+                    )""".as[Words])
+      if (res.isDefined)
+        Ok(res.get)
+      else
+        InternalServerError(new Exception("Server error occurred, try again."))
     }
-    db.endSession()
-    res
   }
 
   /**
@@ -155,15 +147,15 @@ object Retrieve {
     * 403 status code otherwise.
     */
   def languageWords(userId: Int, request: DictRequest, token: Authorization): Output[Seq[Words]] = {
-    val db = new DBHandler()
-
-    val res = if (!isTokenValid(token, userId, Some(db)))
+    if (!isTokenValid(token, userId))
       Unauthorized(new Exception("You don't have access to this information."))
-    else
-      Ok( getWords(userId, request.lang_word, request.lang_translation, "", Some(db)) )
-    
-    db.endSession()
-    res
+    else {
+      val res = getWords(userId, request.lang_word, request.lang_translation)
+      if (res.isDefined) 
+        Ok(res.get)
+      else
+        InternalServerError(new Exception("Server error occurred, try again."))
+    }
   }
 
   /**
@@ -178,14 +170,11 @@ object Retrieve {
     userId: Int, 
     lang_word: String,
     lang_translation: String, 
-    condition: String = "",
-    conn: Option[DBHandler] = None
-  ): Seq[Words] = {
-    val db = if (conn.isDefined) conn.get else new DBHandler()
-    
-    updateUserActivity(userId, Some(db))
+    condition: String = ""
+  ): Option[Seq[Words]] = {
+    updateUserActivity(userId)
 
-    val res = db.fetch(
+    fetch(
       sql"""(SELECT w.* FROM words w, user_words uw
             WHERE user_id=$userId AND id=word_id 
                 AND lang_word=$lang_word
@@ -195,11 +184,8 @@ object Retrieve {
                    WHERE user_id=$userId AND id=word_id
                       AND lang_word=$lang_translation
                       AND lang_translation=$lang_word
-                   )""".as[Words])
-      .get
-    if (!conn.isDefined)    
-      db.endSession()
-    res
+                   )""".as[Words]
+    )
   }
 
   /**
@@ -211,24 +197,22 @@ object Retrieve {
     * 403 status code otherwise.
     */
   def getUserList(token: Authorization): Output[Seq[UserInfo]] = {
-    val db = new DBHandler()
-    val res = {
-      if (!isTokenValid(token, -1, Some(db)))
-        Unauthorized(new Exception("Invalid credentials"))
-
-      Ok(
-        db.fetch(
-          sql"""SELECT id, username, joined, last_seen, coalesce(sum(score), 0) AS score, 
-                        coalesce(sum(tries), 0) AS tries, count(word_id) AS word_count
-                FROM users u
-                LEFT JOIN user_words uw ON u.id=uw.user_id GROUP BY id
-                ORDER BY tries DESC
-                """.as[UserInfo])
-          .get
-      )
+    if (!isTokenValid(token))
+      Unauthorized(new Exception("Invalid credentials"))
+    else {
+      val data = fetch(
+        sql"""SELECT id, username, joined, last_seen, coalesce(sum(score), 0) AS score, 
+                      coalesce(sum(tries), 0) AS tries, count(word_id) AS word_count
+              FROM users u
+              LEFT JOIN user_words uw ON u.id=uw.user_id GROUP BY id
+              ORDER BY tries DESC
+              """.as[UserInfo])
+      
+      if (data.isDefined)
+        Ok(data.get)
+      else
+        InternalServerError(new Exception("Server error occurred, try again."))
     }
-    db.endSession()
-    res
   }
 
   /**
@@ -242,12 +226,10 @@ object Retrieve {
     * searched user is not found.
     */
   def getUserInfo(userId: Int, token: Authorization): Output[UserInfoExtended] = {
-    val db = new DBHandler()
-    val res = {
-      if (!isTokenValid(token, -1, Some(db)))
-        Unauthorized(new Exception("Invalid credentials."))
-
-      val user = db.fetchRow(
+    if (!isTokenValid(token))
+      Unauthorized(new Exception("Invalid credentials."))
+    else {
+      val user = fetchRow(
         sql"""SELECT id, username, sum(score) AS score, 
                     sum(tries) AS tries, last_seen, joined 
               FROM users u
@@ -257,14 +239,12 @@ object Retrieve {
       if (!user.isDefined)
         NotFound(new Exception("User not found."))
 
-      val words = db.fetch(
+      val words = fetch(
         sql"""SELECT w.*, score, tries FROM words w, user_words uw
               WHERE user_id=$userId AND id=word_id""".as[UserWordPair])
 
       if (!words.isDefined) Ok( UserInfoExtended(user.get, Seq[UserWordPair]()) )
       else Ok( UserInfoExtended(user.get, words.get) )
     }
-    db.endSession()
-    res
   }
 }
