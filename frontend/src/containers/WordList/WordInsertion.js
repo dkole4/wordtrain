@@ -130,7 +130,7 @@ export const WordInsertion = () => {
                       type='button'/>
                   </Table.Cell>
                   <Table.Cell>{word.word}</Table.Cell>
-                  <Table.Cell>{word.transl}</Table.Cell>
+                  <Table.Cell>{word.translation}</Table.Cell>
                 </Table.Row>
               )
             }
