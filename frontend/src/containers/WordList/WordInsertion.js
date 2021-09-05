@@ -21,7 +21,15 @@ export const WordInsertion = () => {
   const user = useSelector(state => state.loggedUser)
 
   const addWord = () => {
-    if (transl.value && word.value && wordLang.value && translLang.value) {
+    if (wordList.length >= 10) {
+      dispatch(
+        setErrorMessage(
+          `Word limit of 10 has been reached. 
+           Submit already written words before adding new ones.`
+        )
+      )
+    }
+    else if (transl.value && word.value && wordLang.value && translLang.value) {
       const newWord = {
         word: word.value,
         translation: transl.value,
@@ -30,7 +38,7 @@ export const WordInsertion = () => {
       }
 
       const same = wordList.filter(word => 
-        word.word === newWord.word && word.transl === newWord.transl
+        word.word === newWord.word && word.transl === newWord.translation
       )
 
       if (same.length === 0) {
@@ -118,7 +126,7 @@ export const WordInsertion = () => {
                     <Button 
                       circular
                       icon='minus'
-                      onClick={() => removeWord(word.word, word.transl)}
+                      onClick={() => removeWord(word.word, word.translation)}
                       type='button'/>
                   </Table.Cell>
                   <Table.Cell>{word.word}</Table.Cell>
