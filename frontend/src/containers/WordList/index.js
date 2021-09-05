@@ -30,6 +30,7 @@ export const WordList = () => {
   const [formVisibilty, setVisibility] = useState(false)
 
   const words = useSelector(state => state.words)
+  words.sort((a, b) => (a.score / (a.tries + 1)) - (b.score / (b.tries + 1)))
 
   const showForm = () =>
     setVisibility(!formVisibilty)
