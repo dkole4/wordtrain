@@ -31,15 +31,15 @@ export const createWords = (user, newWords) => {
   }
 }
 
-export const updateWord = (id, user, wordPair) => {
+export const updateWord = (user, wordPair) => {
   return async dispatch => {
-    const updated = await wordService.updateWord(id, user, wordPair)
+    const updated = await wordService.updateWord(user, wordPair)
     
-    if (updated.status === 201) {
+    if (updated.status === 200) {
       dispatch({
         type: 'UPDATE',
         data: updated.data,
-        old: id
+        old: wordPair.id
       })
     } else {
       dispatch(logout())
@@ -51,7 +51,7 @@ export const updateScore = (user, changes) => {
   return async dispatch => {
     const updated = await wordService.updateScore(user, changes)
     
-    if (updated.status === 201) {
+    if (updated.status === 200) {
       dispatch({
         type: 'UPDATE_SCORE',
         data: updated.data
