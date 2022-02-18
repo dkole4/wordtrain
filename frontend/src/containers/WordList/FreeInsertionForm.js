@@ -14,7 +14,7 @@ export const FreeInsertionForm = ({ addMany, resetWordList }) => {
   const addCurrentWords = () => {
     resetWordList()
     const newWords = words.value
-      .replace(/\n/, '')
+      .replace(/\n/g, '')
       .split(';')
       .reduce((arr, word) => {
         if (/[A-Za-z]-[A-Za-z]/.test(word)) {
