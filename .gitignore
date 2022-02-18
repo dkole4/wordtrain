@@ -1,4 +1,5 @@
 .*
+*/build
 
 # Node artifact files
 frontend/node_modules/
