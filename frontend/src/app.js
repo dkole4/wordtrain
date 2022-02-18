@@ -4,8 +4,7 @@ import { Container } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css'
 
 import { initializeUser } from './store/actions/auth-actions'
-import { WordTrain } from './containers/WordTrain'
-import { LoginForm } from './containers/LoginForm'
+import { Main } from './containers/Main'
 
 export const App = () => {
   const dispatch = useDispatch()
@@ -18,9 +17,7 @@ export const App = () => {
 
   return (
     <Container>
-      { user
-        ? <WordTrain user={user}/>
-        : <LoginForm /> }
+      <Main user={user}/>
     </Container>
   )
 }
