@@ -13,7 +13,7 @@ export const WordPair = ({ wordPair, added, addWord }) => {
         { wordPair.translation }
       </Table.Cell>
       <Table.Cell>
-        { wordPair.lang_word} / { wordPair.lang_translation }
+        { wordPair.langWord} / { wordPair.langTranslation }
       </Table.Cell>
       <Table.Cell collapsing textAlign='right'>
         <Button positive={!added} disabled={added} onClick={() => addWord(wordPair)}>

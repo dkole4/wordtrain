@@ -16,7 +16,7 @@ const getRandomValue = (id) =>
 const getRandomizedWords = (words) =>
   words.sort((a, b) => getRandomValue(a.id) - getRandomValue(b.id))
 
-export const TrainingWindow = ({ words, setWords }) => {
+export const TrainingWindow = ({ words, resetModule, trainingLanguage }) => {
   const [current, setCurrent] = useState(0)
   const [score, setScore] = useState(0)
   const [changes, setChanges] = useState([])
@@ -28,16 +28,18 @@ export const TrainingWindow = ({ words, setWords }) => {
   const dispatch = useDispatch()
 
   const handleKeyPress = (e) => {
-    if (e.charCode === 13) {
+    if (e.charCode === 13) {  // Proceed to the next word if Enter was pressed.
       e.preventDefault()
       checkAnswer()
     }
   }
 
   const checkAnswer = () => {
-    const correctAnswer = shuffled[current].translation.toLowerCase()
+    const correctAnswer = (trainingLanguage === shuffled[current].langTranslation) 
+      ? shuffled[current].translation
+      : shuffled[current].word
     
-    if (correctAnswer === answer.value.toLowerCase()) {
+    if (correctAnswer.split('/').includes(answer.value)) {
       dispatch(
         setNotificationMessage(
           `Correct! Your score: ${score+1} / ${current+1}`
@@ -45,16 +47,32 @@ export const TrainingWindow = ({ words, setWords }) => {
       )
       
       setScore(score + 1)
-      setChanges(changes.concat({wordId: shuffled[current].id, score:1, tries:1}))
+      setChanges(
+        changes.concat(
+          {
+            wordId: shuffled[current].id,
+            userId: user.id,
+            tries: shuffled[current].tries + 1, 
+            score: shuffled[current].score + 1
+          }
+        )
+      )
     } else {
       dispatch(
         setErrorMessage(
-          `Wrong. Correct answer: ${shuffled[current].translation}`
+          `Wrong. Correct answer: ${correctAnswer}`
         )
       )
       
       setChanges(
-        changes.concat({wordId: shuffled[current].id, score:0, tries:1})
+        changes.concat(
+          {
+            wordId: shuffled[current].id,
+            userId: user.id,
+            tries: shuffled[current].tries + 1, 
+            score: shuffled[current].score
+          }
+        )
       )
     }
     resetAnswer()
@@ -64,7 +82,7 @@ export const TrainingWindow = ({ words, setWords }) => {
   const finishRound = () => {
     setShuffled([])
     dispatch(updateScore(user, changes))
-    setWords([])
+    resetModule()
   }
 
   if (current >= shuffled.length) {
@@ -85,7 +103,10 @@ export const TrainingWindow = ({ words, setWords }) => {
           <Grid.Row>
             <Grid.Column>
               <Header as='h1'>
-                {shuffled[current].word}
+                { trainingLanguage !== shuffled[current].langWord 
+                  ? shuffled[current].word
+                  : shuffled[current].translation
+                }
               </Header>
             </Grid.Column>
 
@@ -101,13 +122,19 @@ export const TrainingWindow = ({ words, setWords }) => {
           <Grid.Row>
             <Grid.Column>
               <Header disabled>
-                {shuffled[current].lang_word}
+                { trainingLanguage !== shuffled[current].langWord 
+                  ? shuffled[current].langWord
+                  : shuffled[current].langTranslation
+                }
               </Header>
             </Grid.Column>
             
             <Grid.Column>
               <Header disabled>
-                {shuffled[current].lang_translation}
+                { trainingLanguage === shuffled[current].langWord 
+                  ? shuffled[current].langWord
+                  : shuffled[current].langTranslation
+                }
               </Header>
             </Grid.Column>
           </Grid.Row>
@@ -119,5 +146,6 @@ export const TrainingWindow = ({ words, setWords }) => {
 
 TrainingWindow.propTypes = {
   words: PropTypes.array.isRequired,
-  setWords: PropTypes.func.isRequired
+  resetModule: PropTypes.func.isRequired,
+  trainingLanguage: PropTypes.string.isRequired
 }

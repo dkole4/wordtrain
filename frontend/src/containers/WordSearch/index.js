@@ -28,8 +28,8 @@ export const WordSearch = () => {
 
   const addWord = async (wordPair) => {
     const word = {
-      lang_word: wordPair.lang_word,
-      lang_translation: wordPair.lang_translation,
+      langWord: wordPair.langWord,
+      langTranslation: wordPair.langTranslation,
       word: wordPair.word,
       translation: wordPair.translation
     }

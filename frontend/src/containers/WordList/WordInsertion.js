@@ -6,21 +6,26 @@ import { setErrorMessage, setNotificationMessage } from 'store/actions/notificat
 import { createWords } from 'store/actions/word-actions'
 
 import {
-  Container, Table, Button, Header, Form, Dropdown
+  Container, Table, Button, Header, Form, Dropdown, Segment
 } from 'semantic-ui-react'
 import { languageOptions } from '.'
 
+import { RegularInsertionForm } from './RegularInsertionForm'
+import { FreeInsertionForm } from './FreeInsertionForm'
+
+
 export const WordInsertion = () => {
-  const [word, resetWord] = useField('text')
-  const [transl, resetTransl] = useField('text')
-  const [wordLang, resetWordLang] = useField('dropdown')
-  const [translLang, resetTranslLang] = useField('dropdown')
+  const [langWord, resetLangWord] = useField('dropdown')
+  const [langTransl, resetLangTransl] = useField('dropdown')
   const [wordList, setWordList] = useState([])
+  const [freeForm, setFreeForm] = useState(false)
+  const [invertLanguages, setInvertLanguages] = useState(false)
 
   const dispatch = useDispatch()
   const user = useSelector(state => state.loggedUser)
+  const words = useSelector(state => state.words)
 
-  const addWord = () => {
+  const addWord = async (word, translation) => {
     if (wordList.length >= 10) {
       dispatch(
         setErrorMessage(
@@ -29,28 +34,48 @@ export const WordInsertion = () => {
         )
       )
     }
-    else if (transl.value && word.value && wordLang.value && translLang.value) {
+    else if (translation && word && langWord.value && langTransl.value) {
       const newWord = {
-        word: word.value,
-        translation: transl.value,
-        lang_word: wordLang.value,
-        lang_translation: translLang.value
+        word: word,
+        translation: translation,
+        langWord: langWord.value,
+        langTranslation: langTransl.value
       }
 
-      const same = wordList.filter(word => 
-        word.word === newWord.word && word.transl === newWord.translation
+      const same = wordList.filter(w => 
+        w.word === newWord.word && w.transl === newWord.translation
       )
 
       if (same.length === 0) {
         setWordList(wordList.concat(newWord))
-        dispatch(setNotificationMessage(`A new word ${word.value} was added to the list.`))
-        resetWord()
-        resetTransl()
+        dispatch(setNotificationMessage(`A new word ${word} was added to the list.`))
       } else {
         dispatch(setErrorMessage('You already added this word'))
       }
     } else {
       dispatch(setErrorMessage('Some of the fields don\'t have any value'))
+    }
+  }
+
+  const addMany = (words) => {
+    if (words.length >= 10) {
+      dispatch(
+        setErrorMessage(
+          `Word limit of 10 has been reached. 
+           Submit already written words before adding new ones.`
+        )
+      )
+    } else {
+      setWordList(
+        words.map(word => {
+          return {
+            ...word,
+            langWord: invertLanguages ? langTransl : langWord.value,
+            langTranslation: invertLanguages ? langWord : langTransl.value
+          }
+        })
+      )
+      dispatch(setNotificationMessage('Words were added to the list.'))
     }
   }
 
@@ -60,15 +85,30 @@ export const WordInsertion = () => {
 
   const insertWords = async (e) => {
     e.preventDefault()
-    
-    dispatch(createWords(user, wordList))
-    dispatch(setNotificationMessage('Words were successfully added.'))
-    
-    resetWord()
-    resetTransl()
-    resetWordLang()
-    resetTranslLang()
+
+    const checked = wordList.filter(
+      listed => words.find(
+        userWord => 
+          (listed.word === userWord.word && listed.translation === userWord.translation)
+          || (listed.word === userWord.translation && listed.translation === userWord.word)
+      ) === undefined
+    )
+
+    dispatch(createWords(user, checked))
+    resetLangWord()
+    resetLangTransl()
     setWordList([])
+
+    if (checked.length !== wordList.length) {
+      dispatch(
+        setErrorMessage(
+          `You tried to add words that are already in your wordlist.
+          Duplicates were removed and all the remaining words were successfully added.`
+        )
+      )
+    } else {
+      dispatch(setNotificationMessage('Words were successfully added.'))
+    }
   }
 
   return (
@@ -76,48 +116,62 @@ export const WordInsertion = () => {
       <Header>
         Add new words
       </Header>
+      <Segment>
+        <Button fluid onClick={() => setFreeForm(!freeForm)}>
+          { freeForm ? 'Use Free Form' : 'Use Regular Form' }
+        </Button>
+      </Segment>  
+
       <Form onSubmit={insertWords}>
-        <Table>
+
+        <Table unstackable>
           <Table.Header>
-            <Table.Row>              
-              <Table.HeaderCell />
-              <Table.HeaderCell><label>Word</label></Table.HeaderCell>
-              <Table.HeaderCell><label>Translation</label></Table.HeaderCell>
+            <Table.Row>
+              <Table.HeaderCell width={1}/>
+              <Table.HeaderCell width={3}><label>Word</label></Table.HeaderCell>
+              <Table.HeaderCell width={1}/>
+              <Table.HeaderCell width={3}><label>Translation</label></Table.HeaderCell>
             </Table.Row>
           </Table.Header>
-          <Table.Body>
 
+          <Table.Body>
             <Table.Row>
               <Table.Cell />
               <Table.Cell>
                 <Dropdown
-                  {...wordLang}
-                  fluid
-                  placeholder='Select Language'
+                  clearable
+                  search
                   selection
+                  fluid
+                  {...(invertLanguages ? langTransl : langWord)}
+                  placeholder='Select Language'
                   options={languageOptions} />
+              </Table.Cell>
+              <Table.Cell textAlign='center'>
+                <Button 
+                  type='button'
+                  onClick={() => setInvertLanguages(!invertLanguages)} 
+                  icon='arrows alternate horizontal' />
               </Table.Cell>
               <Table.Cell>
                 <Dropdown 
-                  {...translLang}
+                  clearable
+                  search
+                  selection
                   fluid
+                  {...(invertLanguages ? langWord : langTransl)}
                   placeholder='Select Language' 
-                  selection 
                   options={languageOptions} />
               </Table.Cell>
             </Table.Row>
 
-            <Table.Row>
-              <Table.Cell>
-                <Button circular icon='plus' onClick={addWord} type='button'/>
-              </Table.Cell>
-              <Table.Cell>
-                <input placeholder='Enter word' { ...word } />
-              </Table.Cell>
-              <Table.Cell>
-                <input placeholder='Enter translation' { ...transl } />
-              </Table.Cell>
-            </Table.Row>
+            { freeForm
+              ? <RegularInsertionForm 
+                addWord={addWord}
+                removeWord={removeWord} />
+              : <FreeInsertionForm 
+                addMany={addMany}
+                resetWordList={() => setWordList([])} /> }
 
             { 
               wordList.map(word =>
@@ -130,20 +184,23 @@ export const WordInsertion = () => {
                       type='button'/>
                   </Table.Cell>
                   <Table.Cell>{word.word}</Table.Cell>
+                  <Table.Cell />
                   <Table.Cell>{word.translation}</Table.Cell>
                 </Table.Row>
               )
             }
                         
             <Table.Row>
-              <Table.Cell colSpan='3'>
+              <Table.Cell colSpan='4'>
                 <Button disabled={wordList.length === 0} fluid positive type='submit'>
                   Submit
                 </Button>
               </Table.Cell>
             </Table.Row>
           </Table.Body>
+
         </Table>
+
       </Form>
     </Container>
   )

@@ -4,6 +4,12 @@ import { Container, Message } from 'semantic-ui-react'
 
 import { clearMessage } from 'store/actions/notification-actions'
 
+const messageStyle = {
+  position: 'absolute',
+  zIndex: 10,
+  bottom: '15px',
+}
+
 export const Notification = () => {
   const message = useSelector(state => state.notification)
   const dispatch = useDispatch()
@@ -11,16 +17,16 @@ export const Notification = () => {
   const handleDismiss = () =>
     dispatch(clearMessage(message.content))
 
-  if (!message) return <Container />
-
   return (
-    <Container>
-      <Message
-        floating
-        onDismiss={handleDismiss}
-        warning={message.type === 'error'}
-        header={message.content}
-      />
+    <Container style={messageStyle} >
+      { message !== null && 
+        <Message
+          floating
+          onDismiss={handleDismiss}
+          warning={message.type === 'error'}
+          header={message.content}
+        />
+      }
     </Container>
   )
 }

@@ -56,8 +56,8 @@ export const UserList = () => {
             <Table.Row key={user.id}>
               <Table.Cell>{ user.username }</Table.Cell>
               <Table.Cell>{ getLevel(user.tries) } lvl ({ user.tries }) </Table.Cell>
-              <Table.Cell>{ user.word_count }</Table.Cell>
-              <Table.Cell>{ getDate(user.last_seen) }</Table.Cell>
+              <Table.Cell>{ user.wordCount }</Table.Cell>
+              <Table.Cell>{ getDate(user.lastSeen) }</Table.Cell>
               <Table.Cell>{ getDate(user.joined) }</Table.Cell>
             </Table.Row>
           )}

@@ -15,9 +15,18 @@ export const TrainingView = () => {
   const [words, setWords] = useState([])
   const [wordLang, resetWordLang] = useField('dropdown')
   const [transLang, resetTransLang] = useField('dropdown')
+  const [invertLanguages, setInvertLanguages] = useState(false)
   const [size, setSize] = useState(0)
   const user = useSelector(state => state.loggedUser)
   const dispatch = useDispatch()
+
+  const resetModule = () => {
+    setSize(0)
+    resetWordLang()
+    resetTransLang()
+    setWords([])
+    setInvertLanguages(false)
+  }
   
   const getTrainingWords = async () => {
     if (size > 0 && size < 30) {
@@ -30,9 +39,6 @@ export const TrainingView = () => {
         dispatch(setErrorMessage('No words were found.'))
       else
         setWords(words)
-      setSize(0)
-      resetWordLang()
-      resetTransLang()
     } else {
       dispatch(setErrorMessage('Size must be between 0 and 30'))
     }
@@ -58,36 +64,61 @@ export const TrainingView = () => {
         <Table>
           <Table.Header>
             <Table.Row>
-              <Table.HeaderCell>
+              <Table.HeaderCell width={3}>
                 Translation language
               </Table.HeaderCell>
-              <Table.HeaderCell>
+              <Table.HeaderCell width={1}/>
+              <Table.HeaderCell width={3}>
                 Training language
               </Table.HeaderCell>
-              <Table.HeaderCell>
+              <Table.HeaderCell width={2}>
                 Number of words
               </Table.HeaderCell>
-              <Table.HeaderCell />
+              <Table.HeaderCell width={2}/>
             </Table.Row>
 
             <Table.Row>
               <Table.HeaderCell>
-                <Dropdown fluid {...wordLang} placeholder='Select Language' selection options={languageOptions} />
+                <Dropdown 
+                  clearable
+                  selection 
+                  fluid 
+                  { ...(!invertLanguages ? wordLang : transLang) }
+                  placeholder='Select Language' 
+                  options={languageOptions} />
               </Table.HeaderCell>
               <Table.HeaderCell>
-                <Dropdown fluid {...transLang} placeholder='Select Language' selection options={languageOptions} />
+                <Button 
+                  onClick={() => setInvertLanguages(!invertLanguages)} 
+                  icon='arrows alternate horizontal' />
+              </Table.HeaderCell>
+              <Table.HeaderCell>
+                <Dropdown 
+                  clearable
+                  selection 
+                  fluid 
+                  { ...(!invertLanguages ? transLang : wordLang) }
+                  placeholder='Select Language'
+                  options={languageOptions} />
               </Table.HeaderCell>
               <Table.HeaderCell>
                 <Input fluid placeholder='Select size' onChange={updateSize} />
               </Table.HeaderCell>
               <Table.HeaderCell>
-                <Button positive onClick={getTrainingWords}>Start</Button>
+                <Button fluid positive onClick={getTrainingWords}>
+                  Start
+                </Button>
               </Table.HeaderCell>
             </Table.Row>
           </Table.Header>
         </Table>
       }
-      { words.length > 0 && <TrainingWindow words={words} setWords={setWords} /> }
+      { words.length > 0 && 
+        <TrainingWindow 
+          words={words} 
+          resetModule={resetModule} 
+          trainingLanguage={ invertLanguages ? wordLang.value : transLang.value } /> 
+      }
     </Segment>
   )
 }

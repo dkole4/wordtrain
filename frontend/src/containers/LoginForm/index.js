@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useDispatch } from 'react-redux'
 import { Container, Segment, Form, Button } from 'semantic-ui-react'
 
@@ -7,16 +7,12 @@ import { authService } from 'services/auth-service'
 import { setErrorMessage } from 'store/actions/notification-actions'
 import { login } from 'store/actions/auth-actions'
 
-import { Notification } from '../Notification'
-import { RegistrationForm } from './Registration'
-
 
 export const LoginForm = () => {
   const dispatch = useDispatch()
 
   const [username, resetUsername] = useField('text')
   const [password, resetPassword] = useField('password')
-  const [registerView, setView] = useState(false)
   
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -34,35 +30,21 @@ export const LoginForm = () => {
     }
   }
 
-  const switchView = () => 
-    setView(!registerView)
-
   return (
     <Container>
-      <Notification />
       <Segment>
-        { !registerView && 
-          <Form onSubmit={handleSubmit}>
-            <Form.Field>
-              <label>Username</label>
-              <input placeholder='Username' id='username' { ...username } />
-            </Form.Field>
-            <Form.Field>
-              <label>Password</label>
-              <input placeholder='Password' id='password' { ...password } />
-            </Form.Field>
-            <Button positive type='submit'>Login</Button>
-          </Form>
-        }
-        { registerView && 
-          <RegistrationForm />
-        }
+        <Form onSubmit={handleSubmit}>
+          <Form.Field>
+            <label>Username</label>
+            <input placeholder='Username' id='username' { ...username } />
+          </Form.Field>
+          <Form.Field>
+            <label>Password</label>
+            <input placeholder='Password' id='password' { ...password } />
+          </Form.Field>
+          <Button positive type='submit'>Login</Button>
+        </Form>
       </Segment>
-      <Button fluid onClick={switchView}>
-        { registerView 
-          ? 'Log in into account'
-          : 'Register an account' }
-      </Button>
     </Container>
   )
 }
