@@ -8,6 +8,7 @@ A web application that helps people to memorize new words from various languages
     * Docker Engine, version 20.10.12 or newer.
     * Docker Compose, version 1.29.x or newer.
 
+* To run, use command `docker-compose up --build`.
 * To enable CORS, change `spring.profiles.active` property of API to 'production'.
 * To run on a separate machine:
     * Change environment variable `REACT_APP_HOST`'s hostname to your server's address.
@@ -20,7 +21,7 @@ A web application that helps people to memorize new words from various languages
 * Application as a whole
     * [ ] Wider choice of languages
     * [ ] Phrases
-        * [ ] Phrases training with 
+        * [ ] Training view for phrases
     * [ ] Difficulty level for words
         * [ ] Word recommendations/lists based on user level
 
