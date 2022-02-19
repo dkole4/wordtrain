@@ -13,7 +13,7 @@ A web application that helps people to memorize new words from various languages
 * To run on a separate machine:
     * Change environment variable `REACT_APP_HOST`'s hostname to your server's address.
     * Change `wordtr41n.app.jwtSecret` property of API to a secret of the same length (512 bits) or longer.
-    * Change `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB` enviroment variables to suitable values.
+    * Change `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB` enviroment variables to suitable values in `docker-compose.yml`.
     * Change `spring.datasource.url`, `spring.datasource.username` and `spring.datasource.password` properties to chosen values.
 
 ## Roadmap ##
