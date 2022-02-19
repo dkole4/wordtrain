@@ -1,23 +1,46 @@
 # WORDTRAIN #
 
-A web application that helps people to memorize new words from different languages.
+A web application that helps people to memorize new words from various languages.
 
-### How to set up ###
+## Usage ##
 
 * Required tools: 
-    * SBT, tested version: 1.5.5
-    * PostgreSQL, tested version: 12.8
-    * Node.js, tested version: 10.19.0
-* Backend of the app requires 4 environment variables related to the database: 
-    * DB_HOST 
-    * DB_NAME
-    * DB_USER
-    * DB_PASSWD
-* Frontend of the app requires an `.env` file inside the [frontend](https://bitbucket.org/dkole4/wordapp/src/master/frontend/) folder that contains `REACT_APP_HOST=?` line, where `?` is the address of your backend.
+    * Docker Engine, version 20.10.12 or newer.
+    * Docker Compose, version 1.29.x or newer.
 
-* The app requires a running PostgreSQL database with tables contained in the [database](https://bitbucket.org/dkole4/wordapp/src/master/database/) folder.
-* After setting up the database, use `sbt run` inside the [backend](https://bitbucket.org/dkole4/wordapp/src/master/backend/) folder to launch the backend of the app.
-* Use `npm install` and `npm start` inside the [frontend](https://bitbucket.org/dkole4/wordapp/src/master/frontend/) folder to launch the frontend of the app.
+* To enable CORS, change `spring.profiles.active` property of API to 'production'.
+* To run on a separate machine:
+    * Change environment variable `REACT_APP_HOST`'s hostname to your server's address.
+    * Change `wordtr41n.app.jwtSecret` property of API to a secret of the same length (512 bits) or longer.
+    * Change `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB` enviroment variables to suitable values.
+    * Change `spring.datasource.url`, `spring.datasource.username` and `spring.datasource.password` properties to chosen values.
+
+## Roadmap ##
+
+* Application as a whole
+    [ ] Wider choice of languages
+    [ ] Phrases
+        [ ] Phrases training with 
+    [ ] Difficulty level for words
+        [ ] Word recommendations/lists based on user level
+
+* API
+    [x] Basic insertion, changing and removal of words
+    [ ] Authentication and authorization
+        [x] JWT authentication
+        [ ] User roles
+        [ ] (Optional) Email usage
+    [x] Resolve conflicts if users have same words
+    [ ] Automated testing
+    [ ] Allowed language check
+
+* Frontend
+    [x] Login and sign up forms
+    [x] Word insertion, changing and removal
+        [x] Free form insertion
+    [x] Training view
+    [x] Word search
+    [ ] Automated testing
 
 ### Author ###
 
