@@ -18,29 +18,29 @@ A web application that helps people to memorize new words from various languages
 ## Roadmap ##
 
 * Application as a whole
-    [ ] Wider choice of languages
-    [ ] Phrases
-        [ ] Phrases training with 
-    [ ] Difficulty level for words
-        [ ] Word recommendations/lists based on user level
+    * [ ] Wider choice of languages
+    * [ ] Phrases
+        * [ ] Phrases training with 
+    * [ ] Difficulty level for words
+        * [ ] Word recommendations/lists based on user level
 
 * API
-    [x] Basic insertion, changing and removal of words
-    [ ] Authentication and authorization
-        [x] JWT authentication
-        [ ] User roles
-        [ ] (Optional) Email usage
-    [x] Resolve conflicts if users have same words
-    [ ] Automated testing
-    [ ] Allowed language check
+    * [x] Basic insertion, changing and removal of words
+    * [ ] Authentication and authorization
+        * [x] JWT authentication
+        * [ ] User roles
+        * [ ] (Optional) Email usage
+    * [x] Resolve conflicts if users have same words
+    * [ ] Automated testing
+    * [ ] Allowed language check
 
 * Frontend
-    [x] Login and sign up forms
-    [x] Word insertion, changing and removal
-        [x] Free form insertion
-    [x] Training view
-    [x] Word search
-    [ ] Automated testing
+    * [x] Login and sign up forms
+    * [x] Word insertion, changing and removal
+        * [x] Free form insertion
+    * [x] Training view
+    * [x] Word search
+    * [ ] Automated testing
 
 ### Author ###
 
