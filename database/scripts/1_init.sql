@@ -7,14 +7,6 @@ CREATE TABLE users (
   UNIQUE(username)
 );
 
-CREATE TABLE token (
-  user_id BIGSERIAL NOT NULL,
-  token TEXT NOT NULL,
-  expires TIMESTAMP NOT NULL DEFAULT NOW(),
-  PRIMARY KEY(user_id),
-  FOREIGN KEY(user_id) REFERENCES users(id)
-);
-
 CREATE TABLE words (
   id BIGSERIAL PRIMARY KEY,
   word TEXT NOT NULL,
