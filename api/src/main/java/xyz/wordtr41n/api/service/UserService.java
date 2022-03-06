@@ -48,17 +48,6 @@ public class UserService {
         return userRepository.findAllProfiles();
     }
 
-    public User findByUsernameAndPassword(String username, String password) throws BadResourceException {
-        if (!ObjectUtils.isEmpty(username) && !ObjectUtils.isEmpty(password)) {
-            return userRepository.findByUsernameAndPassword(username, password);
-        } else {
-            // TODO: IMPLEMENT BAD REQUEST EXCEPTION
-            BadResourceException exc = new BadResourceException("Failed to authenticate user");
-            exc.addErrorMessage("Username or password is missing");
-            throw exc;
-        }
-    }
-
     public User save(User user) throws BadResourceException, ResourceAlreadyExistsException {
         if (!ObjectUtils.isEmpty(user.getUsername()) && !ObjectUtils.isEmpty(user.getPassword())) {
             if (user.getId() != null && existsById(user.getId())) { 
