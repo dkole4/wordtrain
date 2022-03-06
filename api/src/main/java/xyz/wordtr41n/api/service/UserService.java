@@ -82,6 +82,14 @@ public class UserService {
         }
     }
 
+    public void updateLastSeen(Long userId) throws ResourceNotFoundException {
+        if (!existsById(userId)) {
+            throw new ResourceNotFoundException("Cannot find user with id: " + userId);
+        } else {
+            userRepository.updateLastSeen(userId);
+        }
+    }
+
     public void deleteById(Long id) throws ResourceNotFoundException {
         if (!existsById(id)) { 
             throw new ResourceNotFoundException("Cannot find user with id: " + id);
